@@ -1,0 +1,92 @@
+# -------------------------------------
+# CONFIGURACIÓN GENERAL DE LA APLICACIÓN
+# -------------------------------------
+
+# Configuración del Servidor de Comandos Interno (Flask en main.py)
+command_server:
+  host: "0.0.0.0"
+  port: 5001
+  enabled: True # True para que main.py actúe como servidor esperando trabajos
+
+# Fuente de datos PREDETERMINADA (si main.py se ejecuta sin argumentos y no es 'watch_folder')
+# O configuración para el modo 'watch_folder'
+source:
+  # Tipos: "rtsp", "video_file", "image_file", "image_folder", "watch_folder"
+  type: "watch_folder" # El modo principal de operación para la app persistente
+  # Para "watch_folder":
+  watch_folder_path: "D:/Dataset/Clasificador/Procelec/imagenes/test" # Carpeta a monitorear
+  image_glob_pattern: "*.jpg" # Patrón de imágenes dentro de las subcarpetas de secuencia
+  watch_folder_scan_interval_seconds: 10
+  processed_folder_suffix: "_procesado"
+  # move_to_processed_path: "D:/VehiculosProcesados" # Opcional: mover en lugar de renombrar
+
+  # Para ejecución única si 'type' no es 'watch_folder' y no se pasan args a main.py
+  single_run_source_type: "video_file" # rtsp, video_file, image_file, image_folder
+  single_run_source_path: "D:/Dataset/Clasificador/Procelec/imagenes/test2/video1.mp4"
+
+
+# Modelo YOLO y Tracker
+model:
+  path: "best.pt"
+  tracker_config_file: "bytetrack.yaml"
+  min_global_confidence_for_tracker: 0.5
+
+# Definición de Clases
+classes:
+  names: ['Car','Threewheel','Bus','Truck','Motorbike','Van','Tire']
+  tire_class_name: "Tire"
+  vehicle_class_names: ['Car','Threewheel','Bus','Truck','Motorbike','Van']
+
+# Umbrales de Confianza por Clase
+confidence_thresholds:
+  per_class:
+    Car: 0.5
+    Threewheel: 0.5
+    Bus: 0.5
+    Truck: 0.5
+    Motorbike: 0.5
+    Van: 0.5
+    Tire: 0.7 # Ajustado
+  default_post_filter: 0.3
+
+# Parámetros de Lógica de Conteo y Asociación de Llantas
+tire_logic:
+  iou_threshold_same_physical_tire: 0.4
+  vehicle_box_expansion_x_percent: 0.03
+  vehicle_box_expansion_y_percent: 0.05
+  min_y_fraction_from_veh_top: 0.45
+  max_y_extension_below_veh_bottom_fraction: 0.10
+  accepted_tire_area_ratio_tolerance: 2.0 
+  min_absolute_tire_pixel_area: 50
+
+# Procesamiento y Visualización
+processing:
+  debug_mode: True
+  show_visualization_per_job: True # Mostrar ventana de OpenCV para cada trabajo individual
+  visualization_wait_key: 1
+  frames_to_keep_data_for_lost_tracks: 75 # Para rtsp/video si se procesan como un "trabajo"
+  # Configuración para las imágenes en el payload JSON
+  payload_video:
+    include_processed_video: True # Habilitar envío de video
+    # Parámetros para el video resultante
+    output_video_fps: 10 # FPS del video de salida (puede ser menor que el de la fuente para reducir tamaño)
+    output_video_codec: "avc1" # o "XVID". 'mp4v' para .mp4. 'XVID' para .avi
+    output_video_extension: ".mp4" # o ".avi"
+    # Redimensionar los frames ANTES de escribirlos en el video de salida
+    output_video_frame_max_width: 480 # Reducir tamaño para el video
+    output_video_frame_max_height: 360
+  visualization_plot_options: # Opciones para yolo_results.plot()
+    show_conf: True
+    line_width: 2
+    font_size: 0.6
+    show_labels: True
+     # Opciones para etiquetas personalizadas (conteo de llantas)
+    custom_label_font_scale: 0.6
+    custom_label_thickness: 1
+    custom_label_y_offset: 20 # Píxeles por debajo (o encima) de la caja del vehículo
+
+# Configuración del Servidor Externo (donde ESTE script envía los resultados)
+external_server:
+  enabled: True
+  url: "http://127.0.0.1:5005/api/vehicle_processed_data" # URL del server_receptor.py
+  timeout_seconds: 10

@@ -1,0 +1,16 @@
+# Nucleo de deteccion y Visión por Computadora
+ultralytics
+opencv-python 
+
+# Servidor Web (para el receptor de comandos y el servidor de resultados)
+Flask
+
+# Cliente HTTP (para enviar datos al servidor externo)
+requests
+
+# Manipulación de Datos y Utilidades
+numpy
+PyYAML # Para cargar el config.yaml
+
+# Para el sensor de distancia en distance_sensor.py (si esa parte sigue siendo relevante)
+pyserial
