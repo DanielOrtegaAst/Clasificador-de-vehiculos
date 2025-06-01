@@ -113,6 +113,12 @@ Todos los parámetros se gestionan a través del archivo `config.yaml`. Asegúra
 * `command_server`: Configuración del servidor Flask interno en `main.py`.
 * `external_server`: Configuración del servidor externo al que se envían los resultados.
 
+### Link al repositorio del modulo de captura de imagenes 
+https://github.com/DanielOrtegaAst/Capturer.git
+
+### Link para descargar lotes de imagenes para pruebas 
+https://drive.google.com/drive/folders/1qCkrIaobLIMD-szKfZFITe1QkbMpoprF?usp=sharing
+
 ### Ejecución
 1.  **(Opcional) Iniciar el Servidor Receptor:**
     ```bash
