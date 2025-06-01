@@ -146,7 +146,7 @@ Todos los parámetros se gestionan a través del archivo `config.yaml`. Asegúra
 
 
 ## Resultados en video (clic para reproducir)
-[![Ver demostración en video](docs/prevCamion.jpg)]([processed_videos/camion.mp4](https://www.youtube.com/watch?v=Nu2CSzB1M34))
+[![Alt text](https://img.youtube.com/vi/Nu2CSzB1M34/0.jpg)](https://www.youtube.com/watch?v=Nu2CSzB1M34)
 
 ## Consideraciones Éticas y de Impacto
 El sistema maneja imágenes que pueden ser sensibles. Se han considerado los siguientes puntos:
