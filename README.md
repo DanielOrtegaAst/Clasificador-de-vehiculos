@@ -22,6 +22,12 @@ La solución emplea un modelo de detección de objetos **Ultralytics YOLO11**  e
 
 El sistema ha sido desarrollado con un enfoque modular y altamente configurable, permitiendo su adaptación a diferentes parámetros y la integración con sistemas externos a través de una API HTTP (Flask) para la comunicación entre módulos o la recepción de trabajos.
 
+### Link al repositorio del modulo de captura de imagenes (Para cámara industrial MindVision)
+https://github.com/DanielOrtegaAst/Capturer.git
+
+### Link para descargar lotes de imagenes para pruebas 
+https://drive.google.com/drive/folders/1qCkrIaobLIMD-szKfZFITe1QkbMpoprF?usp=sharing
+
 ## Motivación y Problema Abordado
 
 Los procesos tradicionales de verificación y conteo de ejes/llantas dependen en gran medida de:
@@ -113,11 +119,6 @@ Todos los parámetros se gestionan a través del archivo `config.yaml`. Asegúra
 * `command_server`: Configuración del servidor Flask interno en `main.py`.
 * `external_server`: Configuración del servidor externo al que se envían los resultados.
 
-### Link al repositorio del modulo de captura de imagenes 
-https://github.com/DanielOrtegaAst/Capturer.git
-
-### Link para descargar lotes de imagenes para pruebas 
-https://drive.google.com/drive/folders/1qCkrIaobLIMD-szKfZFITe1QkbMpoprF?usp=sharing
 
 ### Ejecución
 1.  **(Opcional) Iniciar el Servidor Receptor:**
