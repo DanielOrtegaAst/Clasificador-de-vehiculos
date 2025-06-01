@@ -145,10 +145,8 @@ Todos los parámetros se gestionan a través del archivo `config.yaml`. Asegúra
     ![Ejemplo Postman](docs/Web.jpg)
 
 
-## Resultados en video
-[![Ver demostración en video](docs/prevCamion.jpg)](processed_videos/camion.mp4)
-[![Ver demostración en video](docs/prevTaxi.jpg)](processed_videos/taxi.mp4)
-[![Ver demostración en video](docs/prevCamioneta.jpg)](processed_videos/camioneta.mp4)
+## Resultados en video (clic para reproducir)
+[![Ver demostración en video](docs/prevCamion.jpg)]([processed_videos/camion.mp4](https://www.youtube.com/watch?v=Nu2CSzB1M34))
 
 ## Consideraciones Éticas y de Impacto
 El sistema maneja imágenes que pueden ser sensibles. Se han considerado los siguientes puntos:

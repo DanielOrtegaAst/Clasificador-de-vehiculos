@@ -62,19 +62,19 @@ tire_logic:
 # Procesamiento y Visualización
 processing:
   debug_mode: True
-  show_visualization_per_job: True # Mostrar ventana de OpenCV para cada trabajo individual
+  show_visualization_per_job: True # Mostrar ventana de OpenCV para cada trabajo
   visualization_wait_key: 1
   frames_to_keep_data_for_lost_tracks: 75 # Para rtsp/video si se procesan como un "trabajo"
   # Configuración para las imágenes en el payload JSON
   payload_video:
     include_processed_video: True # Habilitar envío de video
     # Parámetros para el video resultante
-    output_video_fps: 10 # FPS del video de salida (puede ser menor que el de la fuente para reducir tamaño)
+    output_video_fps: 10 # FPS del video de salida (menor que el de la fuente para reducir tamaño)
     output_video_codec: "avc1" # o "XVID". 'mp4v' para .mp4. 'XVID' para .avi
     output_video_extension: ".mp4" # o ".avi"
     # Redimensionar los frames ANTES de escribirlos en el video de salida
-    output_video_frame_max_width: 480 # Reducir tamaño para el video
-    output_video_frame_max_height: 360
+    output_video_frame_max_width: 1920 
+    output_video_frame_max_height: 1200
   visualization_plot_options: # Opciones para yolo_results.plot()
     show_conf: True
     line_width: 2

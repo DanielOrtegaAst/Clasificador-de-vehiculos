@@ -1,4 +1,3 @@
-# server_receptor.py
 from flask import Flask, request, jsonify, render_template_string, send_from_directory, url_for
 import datetime
 import json
@@ -12,13 +11,12 @@ VIDEO_CODEC_CONFIG = 'mp4v' # Default
 VIDEO_EXTENSION_CONFIG = '.mp4' # Default
 
 try:
-    # Asumimos que config_loader.py y config.yaml están en el mismo directorio o en PYTHONPATH
-    from config_loader import AppConfig
-    # Crear una instancia de configuración específica para el servidor receptor
-    # Esto asume que config.yaml tiene las claves que el servidor necesita,
-    # como 'processing.debug_mode' y 'processing.payload_video.output_video_codec'
+    # Asumimos que config_loader.py y config.yaml están accesibles
+    # Esto permite que el servidor receptor también use el modo debug de la app principal
+    from config_loader import AppConfig # Importar la clase de configuración
     cfg_receptor_app = AppConfig(config_path_str="config.yaml") # Carga el config.yaml general
     SERVER_DEBUG_MODE = cfg_receptor_app.get('processing.debug_mode', True)
+
     # Obtener el codec de video de la configuración para pasarlo a la plantilla
     payload_video_config = cfg_receptor_app.get('processing.payload_video', {})
     VIDEO_CODEC_CONFIG = payload_video_config.get('output_video_codec', 'mp4v')
@@ -31,12 +29,14 @@ except FileNotFoundError:
 except Exception as e_cfg_load:
     print(f"[SERVER_RECEPTOR] ADVERTENCIA: Error cargando config: {e_cfg_load}. Usando SERVER_DEBUG_MODE=True y codecs/extensión por defecto.")
 
-app = Flask(__name__)
-app.config['SERVER_DEBUG_MODE'] = SERVER_DEBUG_MODE # Guardar en la config de Flask
+app = Flask(__name__) # Crear instancia de la aplicación Flask
+# Guardar nuestro debug_mode en la config de Flask para acceso en endpoints
+app.config['SERVER_DEBUG_MODE'] = SERVER_DEBUG_MODE #
 app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024 # Límite de 64MB para el payload
 
-LOG_FILE = "received_vehicle_data_detailed.log"
-SUMMARY_LOG_FILE = "received_vehicle_summary.csv"
+# --- Constantes y Variables Globales para el Servidor Receptor ---
+LOG_FILE = "received_vehicle_data_detailed.log" # Log detallado con JSON completo
+SUMMARY_LOG_FILE = "received_vehicle_summary.csv" # Log resumido en formato CSV
 
 # Carpeta para guardar y servir los videos procesados
 BASE_DIR = Path(__file__).resolve().parent
@@ -58,9 +58,12 @@ if not os.path.exists(SUMMARY_LOG_FILE):
     except Exception as e:
         print(f"[SERVER_RECEPTOR] Error creando archivo CSV de resumen: {e}")
 
+# Almacenar los últimos N logs en memoria para la página /log
 MAX_LOG_ENTRIES_IN_MEMORY = 100
 recent_log_entries = [] # Lista de strings (cada entrada es un JSON del payload original)
 
+# Plantilla HTML para mostrar la información del último vehículo procesado
+# (Incluye CSS para mejor apariencia)
 IMAGE_DISPLAY_PAGE_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="es">
@@ -130,13 +133,6 @@ IMAGE_DISPLAY_PAGE_TEMPLATE = """
 </html>
 """
 
-# Asegúrate que en tu función `show_last_vehicle_page` en server_receptor.py,
-# estés pasando las variables a render_template_string con los nombres correctos:
-# data_for_template=g_last_vehicle_data_for_template, 
-# reception_time_for_template=g_last_reception_time_for_template,
-# raw_json_str_for_template=g_last_raw_json_str_for_template,
-# video_codec_info_for_template=VIDEO_CODEC_CONFIG
-
 # Variables globales para almacenar los datos del último vehículo para la página principal
 g_last_vehicle_data_for_template = None
 g_last_reception_time_for_template = None
@@ -144,10 +140,14 @@ g_last_raw_json_str_for_template = None
 
 @app.route('/api/vehicle_processed_data', methods=['POST'])
 def receive_vehicle_data():
+    """
+    Endpoint para recibir los datos de los vehículos procesados.
+    Decodifica y guarda el video si se incluye, y actualiza los logs.
+    """
     global g_last_vehicle_data_for_template, g_last_reception_time_for_template 
     global g_last_raw_json_str_for_template, recent_log_entries
     
-    current_server_debug_mode = app.config.get('SERVER_DEBUG_MODE', True)
+    current_server_debug_mode = app.config.get('SERVER_DEBUG_MODE', True) # Obtener de la config de Flask
     timestamp_recepcion_servidor = datetime.datetime.now().isoformat()
     
     if current_server_debug_mode: print(f"[{timestamp_recepcion_servidor}] Petición POST recibida")
@@ -157,11 +157,13 @@ def receive_vehicle_data():
         return jsonify({"status": "error", "message": "Payload debe ser JSON"}), 400
 
     try:
-        data_recibida_original = request.get_json()
+        data_recibida_original = request.get_json() # Payload original del cliente
+        # Crear una copia para modificarla para la visualización y logs de preview
         data_para_template_y_log_preview = data_recibida_original.copy()
 
         video_filename_saved_for_csv = data_recibida_original.get('video_sent_status', 'not_included')
 
+        # Procesar y guardar el video si está presente en el payload
         if 'processed_video_base64' in data_recibida_original and data_recibida_original['processed_video_base64']:
             video_b64_data = data_recibida_original['processed_video_base64']
             
@@ -187,6 +189,7 @@ def receive_vehicle_data():
                 data_para_template_y_log_preview['video_sent_status'] = 'included_but_failed_to_save'
                 video_filename_saved_for_csv = 'error_al_guardar'
         
+        # Eliminar el Base64 del diccionario que se va a mostrar en <pre> y el que se guarda para la página
         if 'processed_video_base64' in data_para_template_y_log_preview:
             data_para_template_y_log_preview['processed_video_base64'] = f"Presente (longitud: {len(data_recibida_original['processed_video_base64'])})"
         
@@ -235,6 +238,8 @@ def receive_vehicle_data():
 
 @app.route('/', methods=['GET'])
 def show_last_vehicle_page():
+    """Muestra la página HTML principal con los datos del último vehículo recibido."""
+    # VIDEO_CODEC_CONFIG y VIDEO_EXTENSION_CONFIG son globales definidos al inicio del script
     return render_template_string(IMAGE_DISPLAY_PAGE_TEMPLATE, 
                                   data_for_template=g_last_vehicle_data_for_template, 
                                   reception_time_for_template=g_last_reception_time_for_template,
@@ -243,6 +248,7 @@ def show_last_vehicle_page():
 
 @app.route('/videos/<path:filename>') # Ruta para servir videos
 def serve_processed_video(filename):
+    """Sirve un archivo de video desde la carpeta PROCESSED_VIDEOS_ABSOLUTE_PATH."""
     if app.config.get('SERVER_DEBUG_MODE', True):
         print(f"[SERVER_RECEPTOR] Solicitud para servir video: {filename} desde {PROCESSED_VIDEOS_ABSOLUTE_PATH}")
     try:
@@ -256,11 +262,14 @@ def serve_processed_video(filename):
 
 @app.route('/log', methods=['GET'])
 def show_log_page():
+    """Muestra una página con los últimos N logs detallados (JSON completos)."""
+    # Usar <pre> para mantener el formato JSON y permitir scroll
     log_content_html = "<pre>" + "\n<hr>\n".join(reversed(recent_log_entries)) + "</pre>"
     return f"<h1>Log de Recepciones Detalladas (JSON, Últimas {MAX_LOG_ENTRIES_IN_MEMORY})</h1><a href=\"{url_for('show_last_vehicle_page')}\">Volver</a>{log_content_html}"
 
 @app.route('/summary_log', methods=['GET'])
 def show_summary_log_page():
+    """Muestra el contenido del archivo CSV de resumen como una tabla HTML."""
     try:
         header_row = "<tr><th>Timestamp Recepción</th><th>Job Source</th><th>Veh Unique ID</th><th>Clase</th><th>Llantas</th><th>Source ID Cliente</th><th>Timestamp Evento Cliente</th><th>Video/Status</th></tr>"
         table_rows = ""
@@ -278,10 +287,12 @@ def show_summary_log_page():
 if __name__ == '__main__':
     # El puerto se podría sacar de config.yaml si se define una sección para el servidor receptor
     server_port = 5005 
-    cfg_server_receptor_port = cfg_receptor_app.get('external_server.receptor_port') # Ejemplo de clave en config
+    cfg_server_receptor_port = cfg_receptor_app.get('external_server.receptor_port')
     if cfg_server_receptor_port:
         server_port = int(cfg_server_receptor_port)
 
     print(f"Iniciando servidor Flask RECEPTOR en http://0.0.0.0:{server_port}")
-    # Para producción, debug=False. use_reloader=False es bueno si debug=True en entornos con hilos.
+    # Para producción, debug=False es más seguro
+    # use_reloader=False es bueno si debug=True en entornos con hilos.
     app.run(host='0.0.0.0', port=server_port, debug=SERVER_DEBUG_MODE, use_reloader=SERVER_DEBUG_MODE)
+    
